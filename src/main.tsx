@@ -10,6 +10,7 @@ import desumask from "./desumask";
 const WIDTH = 400;
 const HEIGHT = 300;
 const MAX_BLOW_DIST = 40;
+const MAX_BLOW_DIST_SQR = MAX_BLOW_DIST * MAX_BLOW_DIST;
 const FORCE_MUL = 30;
 const VEL_MUL = 0.5;
 
@@ -77,9 +78,12 @@ class GameScene extends Phaser.Scene {
     if (ptr.isDown && !desukun.body.hitTest(ptr.x, ptr.y)) {
       this.physics.moveToObject(desukun, ptr, 140);
       this.leaves.forEach((l) => {
-        const rawDistance = Phaser.Math.Distance.BetweenPoints(desukun, l);
-        if (rawDistance > MAX_BLOW_DIST) return;
-        const power = rawDistance / MAX_BLOW_DIST;
+        const rawDistanceSqr = Phaser.Math.Distance.BetweenPointsSquared(
+          desukun,
+          l
+        );
+        if (rawDistanceSqr > MAX_BLOW_DIST_SQR) return;
+        const power = Math.sqrt(rawDistanceSqr) / MAX_BLOW_DIST;
         if (power < 0.5) return;
         const angle = Math.atan2(l.y - desukun.y, l.x - desukun.x);
 
