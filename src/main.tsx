@@ -9,7 +9,9 @@ import desumask from "./desumask";
 
 const WIDTH = 400;
 const HEIGHT = 300;
-const MAX_BLOW_DIST = 100;
+const MAX_BLOW_DIST = 40;
+const FORCE_MUL = 30;
+const VEL_MUL = 0.5;
 
 function choice<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -78,11 +80,17 @@ class GameScene extends Phaser.Scene {
         const rawDistance = Phaser.Math.Distance.BetweenPoints(desukun, l);
         if (rawDistance > MAX_BLOW_DIST) return;
         const power = rawDistance / MAX_BLOW_DIST;
-        const force = 50 * power;
-        if (force < 0.1) return;
+        if (power < 0.5) return;
         const angle = Math.atan2(l.y - desukun.y, l.x - desukun.x);
 
-        l.body.velocity.setToPolar(angle, force);
+        const x =
+          Math.cos(angle) * FORCE_MUL * power +
+          desukun.body.velocity.x * VEL_MUL;
+        const y =
+          Math.sin(angle) * FORCE_MUL * power +
+          desukun.body.velocity.y * VEL_MUL;
+
+        l.body.velocity.set(x, y);
         l.body.setMaxVelocity(250, 250);
         blows = true;
       });
