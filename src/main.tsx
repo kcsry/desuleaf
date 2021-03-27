@@ -5,11 +5,14 @@ import puff from "./img/puff.png";
 import leaf1 from "./img/leaf.png";
 import leaf2 from "./img/leaf2.png";
 import leaf3 from "./img/leaf3.png";
+import leaf4 from "./img/leaf4.png";
 import desumask from "./desumask";
+import gothicImg from "./img/gothic_0.png";
+import gothicCfg from "./img/gothic.xml?url";
 
 const WIDTH = 400;
 const HEIGHT = 300;
-const MAX_BLOW_DIST = 40;
+const MAX_BLOW_DIST = 60;
 const MAX_BLOW_DIST_SQR = MAX_BLOW_DIST * MAX_BLOW_DIST;
 const FORCE_MUL = 30;
 const VEL_MUL = 0.5;
@@ -18,11 +21,16 @@ function choice<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function rand(a: number, b: number): number {
+  return Math.random() * (b - a) + a;
+}
+
 class GameScene extends Phaser.Scene {
   private desukun: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody = null as any;
   private particles: Phaser.GameObjects.Particles.ParticleEmitterManager = null as any;
   private leaves: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
   private emitter: Phaser.GameObjects.Particles.ParticleEmitter = null as any;
+  private scoreText: Phaser.GameObjects.BitmapText;
   constructor() {
     super({ key: "GameScene" });
   }
@@ -34,21 +42,23 @@ class GameScene extends Phaser.Scene {
     this.load.image("leaf1", leaf1);
     this.load.image("leaf2", leaf2);
     this.load.image("leaf3", leaf3);
+    this.load.image("leaf4", leaf4);
+    this.load.bitmapFont("gothic", gothicImg, gothicCfg);
   }
 
   create(): void {
     this.add.tileSprite(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "grass");
 
     const scale = 200;
-    const leafSpriteNames = ["leaf1", "leaf2", "leaf3"];
+    const leafSpriteNames = ["leaf1", "leaf2", "leaf3", "leaf4"];
     for (let i = 0; i < 700; i++) {
       const [fx, fy] = choice(desumask);
-      const x = 90 + fx * scale;
-      const y = 15 + fy * scale;
+      const x = 90 + fx * scale + Math.random() * 3;
+      const y = 15 + fy * scale + Math.random() * 3;
       const spr = this.physics.add.sprite(x, y, choice(leafSpriteNames));
       spr.flipX = Math.random() < 0.5;
       spr.flipY = Math.random() < 0.5;
-      spr.body.setDrag(50, 50);
+      spr.body.setDrag(150, 150);
       // spr.body.setFriction(0.3, 0.3);
       this.leaves.push(spr);
     }
@@ -68,6 +78,9 @@ class GameScene extends Phaser.Scene {
     });
 
     this.emitter.startFollow(this.desukun);
+
+    this.scoreText = this.add.bitmapText(5, 5, "gothic", "hello");
+    this.scoreText.blendMode = "ADD";
   }
 
   update(): void {
@@ -94,14 +107,27 @@ class GameScene extends Phaser.Scene {
           Math.sin(angle) * FORCE_MUL * power +
           desukun.body.velocity.y * VEL_MUL;
 
-        l.body.velocity.set(x, y);
-        l.body.setMaxVelocity(250, 250);
+        const blowForceMul = 0.11;
+        l.body.velocity.add({
+          x: x * rand(0.2, 0.5) * blowForceMul,
+          y: y * rand(0.2, 0.5) * blowForceMul,
+        });
         blows = true;
       });
     } else {
       const vel = desukun.body.velocity.scale(0.9);
       desukun.setVelocity(vel.x, vel.y);
     }
+    const rawScore =
+      this.leaves.reduce((sc, l) => {
+        if (l.x < 0 || l.x > WIDTH || l.y < 0 || l.y > HEIGHT) {
+          return sc + 1;
+        }
+        return sc;
+      }, 0) / this.leaves.length;
+    const score = Math.round(rawScore * 100);
+    this.scoreText.setText(`Score: ${score}%`);
+
     this.emitter.on = blows;
   }
 }
