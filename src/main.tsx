@@ -24,7 +24,7 @@ const MAX_BLOW_DIST_SQR = MAX_BLOW_DIST * MAX_BLOW_DIST;
 const FORCE_MUL = 50;
 const VEL_MUL = 0.55;
 const TOTAL_TIME = 100;
-const GOOD_SCORE = 60;
+const GOOD_SCORE = 66;
 
 function choice<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -43,6 +43,7 @@ const LOOP_CONFIG = {
 };
 
 function getRank(score: number): string {
+  if (score >= 98) return "SUPER STAR";
   const letter = "SABCDFGQXÖ"[Math.floor(9 - score / 10)];
   const plus = score % 10 > 8 ? "+" : score % 10 < 3 ? "-" : "";
   return letter + plus;
@@ -188,11 +189,11 @@ class GameScene extends Phaser.Scene {
     }
   };
 
-  update(): void {
+  update(time, delta): void {
     this.score = this.computeScore();
     const timeRemaining = Math.max(0, TOTAL_TIME - this.timeElapsed);
     this.scoreText.setText(`Score: ${this.score}% - Time: ${timeRemaining}`);
-    this.regularGameplay(timeRemaining);
+    this.regularGameplay(timeRemaining, delta);
   }
 
   private computeScore() {
@@ -206,7 +207,7 @@ class GameScene extends Phaser.Scene {
     return Math.round(rawScore * 100);
   }
 
-  private regularGameplay(timeRemaining: number): void {
+  private regularGameplay(timeRemaining: number, delta: number): void {
     const desukun = this.desukun;
     const ptr = this.input.activePointer;
     let blows = 0;
@@ -244,7 +245,7 @@ class GameScene extends Phaser.Scene {
           Math.sin(angle) * FORCE_MUL * power +
           desukun.body.velocity.y * VEL_MUL;
 
-        const blowForceMul = 0.11;
+        const blowForceMul = 0.11 * (delta / 7);
         l.body.velocity.add({
           x: x * rand(0.2, 0.5) * blowForceMul,
           y: y * rand(0.2, 0.5) * blowForceMul,
