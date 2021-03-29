@@ -208,8 +208,7 @@ class GameScene extends Phaser.Scene {
 
   private regularGameplay(timeRemaining: number): void {
     const desukun = this.desukun;
-    // TODO: touch too, not just mouse?
-    const ptr = this.input.mousePointer;
+    const ptr = this.input.activePointer;
     let blows = 0;
     desukun.setTexture(
       desukun.body.velocity.length() > 5
