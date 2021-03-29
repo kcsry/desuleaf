@@ -7,6 +7,8 @@ import leaf1 from "./img/leaf.png";
 import leaf2 from "./img/leaf2.png";
 import leaf3 from "./img/leaf3.png";
 import leaf4 from "./img/leaf4.png";
+import birb from "./mus/birb.mp3";
+import pr3 from "./mus/pr3.mp3";
 import desumask from "./desumask";
 import gothicImg from "./img/gothic_0.png";
 import gothicCfg from "./img/gothic.xml?url";
@@ -26,12 +28,21 @@ function rand(a: number, b: number): number {
   return Math.random() * (b - a) + a;
 }
 
+const LOOP_CONFIG = {
+  name: "loop",
+  start: 0,
+  config: {
+    loop: true,
+  },
+};
+
 class GameScene extends Phaser.Scene {
   private desukun: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody = null as any;
   private particles: Phaser.GameObjects.Particles.ParticleEmitterManager = null as any;
   private leaves: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
   private emitter: Phaser.GameObjects.Particles.ParticleEmitter = null as any;
   private scoreText: Phaser.GameObjects.BitmapText = null as any;
+  private motor: Phaser.Sound.BaseSound = null as any;
   constructor() {
     super({ key: "GameScene" });
   }
@@ -45,6 +56,9 @@ class GameScene extends Phaser.Scene {
     this.load.image("leaf2", leaf2);
     this.load.image("leaf3", leaf3);
     this.load.image("leaf4", leaf4);
+    this.load.audio("birb", birb);
+    this.load.audio("motor", pr3);
+
     this.load.bitmapFont("gothic", gothicImg, gothicCfg);
   }
 
@@ -84,6 +98,13 @@ class GameScene extends Phaser.Scene {
 
     this.scoreText = this.add.bitmapText(5, 5, "gothic", "hello");
     this.scoreText.blendMode = "ADD";
+
+    const birbs = this.sound.add("birb");
+    birbs.addMarker(LOOP_CONFIG);
+    birbs.play("loop");
+    this.motor = this.sound.add("motor");
+    this.motor.addMarker(LOOP_CONFIG);
+    this.motor.play("loop");
   }
 
   update(): void {
@@ -140,6 +161,8 @@ class GameScene extends Phaser.Scene {
     this.scoreText.setText(`Score: ${score}%`);
 
     this.emitter.on = blows > 10;
+    if (blows > 5) this.motor.resume();
+    else this.motor.pause();
   }
 }
 
