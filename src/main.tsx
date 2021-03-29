@@ -44,6 +44,7 @@ const LOOP_CONFIG = {
 
 function getRank(score: number): string {
   if (score >= 98) return "SUPER STAR";
+  if (Math.floor(score) === 69) return "NICE ;)";
   const letter = "SABCDFGQXÖ"[Math.floor(9 - score / 10)];
   const plus = score % 10 > 8 ? "+" : score % 10 < 3 ? "-" : "";
   return letter + plus;
