@@ -1,5 +1,6 @@
 import * as Phaser from "phaser";
-import desukun from "./img/desukun.png";
+import desukun1 from "./img/desukun1.png";
+import desukun2 from "./img/desukun2.png";
 import grass from "./img/grass1.png";
 import puff from "./img/puff.png";
 import leaf1 from "./img/leaf.png";
@@ -10,11 +11,11 @@ import desumask from "./desumask";
 import gothicImg from "./img/gothic_0.png";
 import gothicCfg from "./img/gothic.xml?url";
 
-const WIDTH = 400;
-const HEIGHT = 300;
-const MAX_BLOW_DIST = 60;
+const WIDTH = 600;
+const HEIGHT = 400;
+const MAX_BLOW_DIST = 50;
 const MAX_BLOW_DIST_SQR = MAX_BLOW_DIST * MAX_BLOW_DIST;
-const FORCE_MUL = 30;
+const FORCE_MUL = 50;
 const VEL_MUL = 0.5;
 
 function choice<T>(arr: readonly T[]): T {
@@ -30,13 +31,14 @@ class GameScene extends Phaser.Scene {
   private particles: Phaser.GameObjects.Particles.ParticleEmitterManager = null as any;
   private leaves: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
   private emitter: Phaser.GameObjects.Particles.ParticleEmitter = null as any;
-  private scoreText: Phaser.GameObjects.BitmapText;
+  private scoreText: Phaser.GameObjects.BitmapText = null as any;
   constructor() {
     super({ key: "GameScene" });
   }
 
   preload(): void {
-    this.load.image("desukun", desukun);
+    this.load.image("desukun1", desukun1);
+    this.load.image("desukun2", desukun2);
     this.load.image("grass", grass);
     this.load.image("puff", puff);
     this.load.image("leaf1", leaf1);
@@ -49,21 +51,22 @@ class GameScene extends Phaser.Scene {
   create(): void {
     this.add.tileSprite(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "grass");
 
-    const scale = 200;
+    const scale = 260;
     const leafSpriteNames = ["leaf1", "leaf2", "leaf3", "leaf4"];
     for (let i = 0; i < 700; i++) {
       const [fx, fy] = choice(desumask);
-      const x = 90 + fx * scale + Math.random() * 3;
+      const x = 160 + fx * scale + Math.random() * 3;
       const y = 15 + fy * scale + Math.random() * 3;
       const spr = this.physics.add.sprite(x, y, choice(leafSpriteNames));
       spr.flipX = Math.random() < 0.5;
       spr.flipY = Math.random() < 0.5;
       spr.body.setDrag(150, 150);
+      spr.body.setAngularDrag(500);
       // spr.body.setFriction(0.3, 0.3);
       this.leaves.push(spr);
     }
 
-    this.desukun = this.physics.add.sprite(55, 55, "desukun");
+    this.desukun = this.physics.add.sprite(55, 55, "desukun1");
     this.desukun.setCollideWorldBounds(true);
 
     this.particles = this.add.particles("puff");
@@ -87,9 +90,16 @@ class GameScene extends Phaser.Scene {
     const desukun = this.desukun;
     // TODO: touch too, not just mouse?
     const ptr = this.input.mousePointer;
-    let blows = false;
+    let blows = 0;
+    desukun.setTexture(
+      desukun.body.velocity.length() > 5
+        ? ["desukun1", "desukun2"][Math.floor(this.game.getTime() / 100) % 2]
+        : "desukun1"
+    );
     if (ptr.isDown && !desukun.body.hitTest(ptr.x, ptr.y)) {
-      this.physics.moveToObject(desukun, ptr, 140);
+      desukun.flipX = desukun.body.velocity.x > 0;
+      this.emitter.followOffset.set(-60 * (desukun.flipX ? -1 : 1), 0);
+      this.physics.moveToObject(desukun, ptr, 180);
       this.leaves.forEach((l) => {
         const rawDistanceSqr = Phaser.Math.Distance.BetweenPointsSquared(
           desukun,
@@ -112,7 +122,8 @@ class GameScene extends Phaser.Scene {
           x: x * rand(0.2, 0.5) * blowForceMul,
           y: y * rand(0.2, 0.5) * blowForceMul,
         });
-        blows = true;
+        l.body.angularVelocity += 15 * Math.cos(angle);
+        blows++;
       });
     } else {
       const vel = desukun.body.velocity.scale(0.9);
@@ -128,7 +139,7 @@ class GameScene extends Phaser.Scene {
     const score = Math.round(rawScore * 100);
     this.scoreText.setText(`Score: ${score}%`);
 
-    this.emitter.on = blows;
+    this.emitter.on = blows > 10;
   }
 }
 
