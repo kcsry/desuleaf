@@ -160,11 +160,13 @@ class GameScene extends Phaser.Scene {
       const admo =
         this.score >= GOOD_SCORE ? "GOOD JOB !!!" : "YOU CAN DO BETTER";
       this.rankText.setText(`RANK ${getRank(this.score)}\n${admo}`);
+      let music: Phaser.Sound.WebAudioSound | undefined = undefined;
       if (this.score >= GOOD_SCORE) {
         this.time.addEvent({
           delay: 1500,
           callback: () => {
-            this.sound.add("music").play();
+            music = this.sound.add("music") as Phaser.Sound.WebAudioSound;
+            music.play();
           },
         });
       }
@@ -180,6 +182,7 @@ class GameScene extends Phaser.Scene {
       retry.setInteractive();
       retry.on("pointerdown", () => {
         this.birbs.destroy();
+        if (music) music.destroy();
         this.scene.restart();
       });
     }

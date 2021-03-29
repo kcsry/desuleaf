@@ -3,3 +3,8 @@ body {
   overflow: hidden;
   background: #121;
 }
+
+canvas {
+  display: block;
+  margin: auto;
+}
