@@ -138,7 +138,7 @@ class GameScene extends Phaser.Scene {
     this.helpText.setScale(2, 2);
     this.helpText.blendMode = "ADD";
 
-    this.birbs = this.sound.add("birb");
+    this.birbs = this.sound.add("birb") as Phaser.Sound.WebAudioSound;
     this.birbs.addMarker(LOOP_CONFIG);
     this.birbs.play("loop");
     this.motor = this.sound.add("motor") as Phaser.Sound.WebAudioSound;
