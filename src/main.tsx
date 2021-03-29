@@ -1,3 +1,4 @@
+import "./index.css";
 import * as Phaser from "phaser";
 import desukun1 from "./img/desukun1.png";
 import desukun2 from "./img/desukun2.png";
@@ -54,6 +55,8 @@ class GameScene extends Phaser.Scene {
   private emitter: Phaser.GameObjects.Particles.ParticleEmitter = null as any;
   private scoreText: Phaser.GameObjects.BitmapText = null as any;
   private rankText: Phaser.GameObjects.BitmapText = null as any;
+  private helpText: Phaser.GameObjects.BitmapText = null as any;
+  private birbs: Phaser.Sound.WebAudioSound = null as any;
   private motor: Phaser.Sound.WebAudioSound = null as any;
   private timer: Phaser.Time.TimerEvent = null as any;
   private score = 0;
@@ -81,6 +84,9 @@ class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.score = 0;
+    this.timeElapsed = 0;
+    this.leaves = [];
     this.add.tileSprite(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, "grass");
 
     const scale = 260;
@@ -119,11 +125,22 @@ class GameScene extends Phaser.Scene {
     this.rankText = this.add.bitmapText(WIDTH / 2, HEIGHT / 2, "gothic", "");
     this.rankText.setOrigin(0.5, 0.5);
     this.rankText.setScale(3, 3);
+    this.rankText.setCenterAlign();
     this.rankText.blendMode = "ADD";
 
-    const birbs = this.sound.add("birb");
-    birbs.addMarker(LOOP_CONFIG);
-    birbs.play("loop");
+    this.helpText = this.add.bitmapText(
+      WIDTH / 2,
+      HEIGHT / 2,
+      "gothic",
+      "HELP DESU-KUN CLEAN UP LAWN!!\nUSE YOUR MOUSE !\nGOOD SCORE = EXTRA PRIZE ..."
+    );
+    this.helpText.setOrigin(0.5, 0.5);
+    this.helpText.setScale(2, 2);
+    this.helpText.blendMode = "ADD";
+
+    this.birbs = this.sound.add("birb");
+    this.birbs.addMarker(LOOP_CONFIG);
+    this.birbs.play("loop");
     this.motor = this.sound.add("motor") as Phaser.Sound.WebAudioSound;
     this.motor.addMarker(LOOP_CONFIG);
     this.motor.setVolume(0);
@@ -140,7 +157,9 @@ class GameScene extends Phaser.Scene {
     this.timeElapsed++;
     if (Math.floor(this.timeElapsed) === TOTAL_TIME + 10) {
       this.sound.add(this.score >= GOOD_SCORE ? "tada" : "bad").play();
-      this.rankText.setText("RANK " + getRank(this.score));
+      const admo =
+        this.score >= GOOD_SCORE ? "GOOD JOB !!!" : "YOU CAN DO BETTER";
+      this.rankText.setText(`RANK ${getRank(this.score)}\n${admo}`);
       if (this.score >= GOOD_SCORE) {
         this.time.addEvent({
           delay: 1500,
@@ -149,6 +168,20 @@ class GameScene extends Phaser.Scene {
           },
         });
       }
+      const retry = this.add.bitmapText(
+        WIDTH / 2,
+        HEIGHT * 0.8,
+        "gothic",
+        "[ RETRY! ]"
+      );
+      retry.setOrigin(0.5, 0.5);
+      retry.setScale(2, 2);
+      retry.blendMode = "ADD";
+      retry.setInteractive();
+      retry.on("pointerdown", () => {
+        this.birbs.destroy();
+        this.scene.restart();
+      });
     }
   };
 
@@ -224,6 +257,7 @@ class GameScene extends Phaser.Scene {
 
     this.emitter.on = blows > 10;
     if (blows > 5) {
+      this.helpText.setVisible(false);
       if (!this.motor.isPlaying) {
         this.motor.play("loop");
       }
