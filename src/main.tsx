@@ -43,6 +43,7 @@ const LOOP_CONFIG = {
 };
 
 function getRank(score: number): string {
+  if (score <= 1) return "BAD :(";
   if (score >= 98) return "SUPER STAR";
   if (Math.floor(score) === 69) return "NICE ;)";
   const rankMaj = Math.max(0, Math.min(9, Math.floor(9 - score / 10)));
@@ -228,7 +229,9 @@ class GameScene extends Phaser.Scene {
       Phaser.Math.Distance.BetweenPointsSquared(desukun, ptr) > 45 &&
       timeRemaining > 0
     ) {
-      desukun.flipX = desukun.body.velocity.x > 0;
+      if (Math.abs(desukun.body.velocity.x) > 1) {
+        desukun.flipX = desukun.body.velocity.x > 0;
+      }
       this.emitter.followOffset.set(-60 * (desukun.flipX ? -1 : 1), 0);
       this.physics.moveToObject(desukun, ptr, 180);
       this.leaves.forEach((l) => {
