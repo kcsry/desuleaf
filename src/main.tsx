@@ -45,8 +45,10 @@ const LOOP_CONFIG = {
 function getRank(score: number): string {
   if (score >= 98) return "SUPER STAR";
   if (Math.floor(score) === 69) return "NICE ;)";
-  const letter = "SABCDFGQXÖ"[Math.floor(9 - score / 10)];
-  const plus = score % 10 > 8 ? "+" : score % 10 < 3 ? "-" : "";
+  const rankMaj = Math.max(0, Math.min(9, Math.floor(9 - score / 10)));
+  const rankMin = score % 10;
+  const letter = "SABCDFGQXÖ"[rankMaj];
+  const plus = rankMin > 8 ? "+" : rankMin < 3 ? "-" : "";
   return letter + plus;
 }
 
@@ -190,7 +192,7 @@ class GameScene extends Phaser.Scene {
     }
   };
 
-  update(time, delta): void {
+  update(time: number, delta: number): void {
     this.score = this.computeScore();
     const timeRemaining = Math.max(0, TOTAL_TIME - this.timeElapsed);
     this.scoreText.setText(`Score: ${this.score}% - Time: ${timeRemaining}`);
@@ -284,6 +286,7 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: "arcade",
     arcade: {
+      fps: 60,
       // debug: true,
     },
   },
